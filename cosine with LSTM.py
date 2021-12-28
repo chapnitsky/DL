@@ -1,9 +1,12 @@
+# DORON CHAPNITSKY 316231190
+
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
-# % matplotlib inline
+# % matplotlib
+# inline
 
 import theano
 
@@ -20,7 +23,7 @@ def create_dataset(dataset, look_back=1):
     return np.array(dataX), np.array(dataY)
 
 
-look_back = 20
+look_back = 30
 scaler = MinMaxScaler(feature_range=(0, 1))
 dataset = scaler.fit_transform(dataset)
 
@@ -37,16 +40,16 @@ testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
 
 theano.config.compute_test_value = "ignore"
 # create and fit the LSTM network
-batch_size = 2
+batch_size = 1
 model = Sequential()
 model.add(LSTM(32, batch_input_shape=(batch_size, look_back, 1), stateful=True, return_sequences=True))
 model.add(LSTM(32, input_dim=1))
 model.add(Dense(1))
 
-model.compile(loss='mean_squared_error', optimizer='adam')
-model.fit(trainX, trainY, epochs=200, batch_size=batch_size, verbose=2)
+model.compile(loss='mean_squared_error', optimizer='sgd')
+model.fit(trainX, trainY, epochs=50, batch_size=batch_size, verbose=2)
 
-look_ahead = 250
+look_ahead = 300
 trainPredict = [np.vstack([trainX[-1][1:], trainY[-1]])]
 predictions = np.zeros((look_ahead, 1))
 for i in range(look_ahead):
