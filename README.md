@@ -1,2 +1,2 @@
 # DL
-Deep Learning repository, models, optimizers &amp; some result graphs..
+Deep Learning models, optimizers, methods and graphs :)
