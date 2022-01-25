@@ -16,7 +16,7 @@ import time
 import math
 
 
-def load_data(filepath='./shrec2017_skel-data.pckl'):
+def load_data(filepath='./hands/leapGestRecog'):
     """
     Returns hand gesture sequences (X) and their associated labels (Y).
     Each sequence has two different labels.
