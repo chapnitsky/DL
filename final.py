@@ -1,12 +1,6 @@
-from __future__ import unicode_literals, print_function, division
+# from __future__ import unicode_literals, print_function, division
 import sys
-
-if sys.version_info.major < 3:
-    print('You are using python 2, but you should rather use python 3.')
-    print('    If you still want to use python 2, ensure you import:')
-    print('    >> from __future__ import unicode_literals, print_function, division')
-
-import itertools
+import os
 import numpy
 import torch
 import pickle
@@ -15,15 +9,23 @@ from sklearn.utils import shuffle
 import time
 import math
 
+classes = {0: 'palm', 1: 'l', 2: 'fist', 3: 'fist_moved', 4: 'thumb', 5: 'index', 6: 'ok', 7: 'palm_moved', 8: 'c', 9: 'down'}
 
-def load_data(filepath='./hands/leapGestRecog'):
+
+def load_data(folder_path='./hands/leapGestRecog', shap=(640, 240)):
     """
     Returns hand gesture sequences (X) and their associated labels (Y).
     Each sequence has two different labels.
     The first label  Y describes the gesture class out of 14 possible gestures (e.g. swiping your hand to the right).
     The second label Y describes the gesture class out of 28 possible gestures (e.g. swiping your hand to the right with your index pointed, or not pointed).
     """
-    file = open(filepath, 'rb')
+    persons = 10
+    X = numpy.array()
+    for i in range(persons):
+        sub_dirs = os.listdir(f'{folder_path}/{i}')
+        print(sub_dirs)
+        # os.rename()
+        file = open(f'{folder_path}/{i}/', 'rb')
     data = pickle.load(file, encoding='latin1')  # <<---- change to 'latin1' to 'utf8' if the data does not load
     file.close()
     return data['x_train'], data['x_test'], data['y_train_14'], data['y_train_28'], data['y_test_14'], data['y_test_28']
