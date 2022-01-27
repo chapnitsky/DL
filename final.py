@@ -1,34 +1,81 @@
 # from __future__ import unicode_literals, print_function, division
+import itertools
 import sys
+import os
+import pandas as pd
 import os
 import numpy
 import torch
+from torch.utils.data import Dataset
+import torchvision.transforms as transformers
+from PIL import Image
 import pickle
 from scipy import ndimage
 from sklearn.utils import shuffle
 import time
 import math
+import re
 
-classes = {0: 'palm', 1: 'l', 2: 'fist', 3: 'fist_moved', 4: 'thumb', 5: 'index', 6: 'ok', 7: 'palm_moved', 8: 'c', 9: 'down'}
+classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'index': 5, 'ok': 6, 'palm_moved': 7, 'c': 8,
+           'down': 9}
 
 
-def load_data(folder_path='./hands/leapGestRecog', shap=(640, 240)):
+class handsDataSet(Dataset):
+    def __init__(self, transformer, data_frame):
+        self.data = data_frame
+        self.transform = transformer
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        img_id = self.data['img_id'][index]
+        typ = self.data['label'][index]
+
+        _indexes = [m.start() for m in re.finditer('_', img_id)]
+        person = int(img_id[_indexes[0] + 1: _indexes[1]])
+        path = f'{os.getcwd()}/hands/{person}'
+        dir = os.listdir(path)[typ]
+        path += f'/{dir}/{img_id}'
+
+        img = Image.open(path).convert('RGB')
+        img = self.transform(img)
+        label = torch.tensor(float(typ))
+
+        return img, label
+
+
+
+
+def load_data(folder_path='./hands', shap=(640, 240)):
     """
     Returns hand gesture sequences (X) and their associated labels (Y).
     Each sequence has two different labels.
     The first label  Y describes the gesture class out of 14 possible gestures (e.g. swiping your hand to the right).
     The second label Y describes the gesture class out of 28 possible gestures (e.g. swiping your hand to the right with your index pointed, or not pointed).
     """
+    data = pd.DataFrame(columns=['img_id', 'label'])
     persons = 10
-    X = numpy.array()
+    pngs = []
+    labels = []
     for i in range(persons):
         sub_dirs = os.listdir(f'{folder_path}/{i}')
-        print(sub_dirs)
-        # os.rename()
-        file = open(f'{folder_path}/{i}/', 'rb')
-    data = pickle.load(file, encoding='latin1')  # <<---- change to 'latin1' to 'utf8' if the data does not load
-    file.close()
-    return data['x_train'], data['x_test'], data['y_train_14'], data['y_train_28'], data['y_test_14'], data['y_test_28']
+        for dir in sub_dirs:
+            path = f'{folder_path}/{i}/{dir}'
+            subs = os.listdir(path)
+            for png in subs:
+                if '.png' in png:
+                    png = str(png)
+                    pngs.append(png)
+
+                    _indexes = [m.start() for m in re.finditer('_', png)]
+                    label = int(png[_indexes[1] + 1: _indexes[2]]) - 1
+                    labels.append(label)
+
+    data['img_id'] = pngs
+    data['label'] = labels
+    data.to_csv('./data.csv', index=False)
+    return data
 
 
 def resize_sequences_length(x_train, x_test, final_length=100):
@@ -326,8 +373,25 @@ class HandGestureNet(torch.nn.Module):
 
 
 # Load the dataset
-x_train, x_test, y_train_14, y_train_28, y_test_14, y_test_28 = load_data()
+x_train, x_test, y_train_14, y_train_28, y_test_14, y_test_28 = 0, 0, 0, 0, 0, 0
+data = load_data()
 
+data_transforms = {
+    'train': transformers.Compose([
+        transformers.RandomResizedCrop(300),
+        transformers.RandomHorizontalFlip(),
+        transformers.ToTensor(),
+        transformers.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+    ]),
+    'test': transformers.Compose([
+        transformers.Resize(300),
+        transformers.CenterCrop(224),
+        transformers.ToTensor(),
+        transformers.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+    ]),
+}
+
+obj = handsDataSet(data_frame=data, transformer=data_transforms)
 # Shuffle sequences and resize sequences
 x_train, x_test, y_train_14, y_train_28, y_test_14, y_test_28 = preprocess_data(x_train, x_test, y_train_14, y_train_28,
                                                                                 y_test_14, y_test_28)
