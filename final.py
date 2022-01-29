@@ -422,7 +422,7 @@ if __name__ == '__main__':
                                                                                                y_train_28, y_test_14,
                                                                                                y_test_28)
 
-    model = HandGestureNet(n_channels=66, n_classes=14)
+    model = HandGestureNet(n_channels=66, n_classes=10)
 
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(params=model.parameters(), lr=1e-3)
@@ -435,7 +435,6 @@ if __name__ == '__main__':
 
     torch.save(model.state_dict(), 'gesture_pretrained_model.pt')
 
-    model = HandGestureNet(n_channels=66, n_classes=14)
     model.load_state_dict(torch.load('gesture_pretrained_model.pt'))
     model.eval()
 
