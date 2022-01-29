@@ -281,7 +281,7 @@ def convert_to_pytorch_tensors(x_train, x_test, y_train_14, y_train_28, y_test_1
     return x_train, x_test, y_train_14, y_train_28, y_test_14, y_test_28
 
 
-def batch(tensor, batch_size=32):
+def batch(tensor, batch_size=40):
     """Return a list of (mini) batches"""
     tensor_list = []
     length = tensor.shape[0]
@@ -375,6 +375,7 @@ if __name__ == '__main__':
     data_pd = load_data()
 
     data_transforms = transformers.Compose([
+        # Random Horizontal Flip
         transformers.RandomHorizontalFlip(0.5),
         # Random vertical flip
         transformers.RandomVerticalFlip(0.3),
@@ -393,7 +394,7 @@ if __name__ == '__main__':
 
     x_train, x_test = random_split(data_set, [train_size, test_size])
 
-    # training data , 50-image batches
+    # training data , 40-image batches
     train_loader = torch.utils.data.DataLoader(
         x_train,
         batch_size=40,
@@ -408,13 +409,12 @@ if __name__ == '__main__':
         num_workers=0,
         shuffle=True
     )
-
+##################################################################################
     y_train_14, y_train_28, y_test_14, y_test_28 = 0, 0, 0, 0
 
-    # Shuffle sequences and resize sequences
-    x_train, x_test, y_train_14, y_train_28, y_test_14, y_test_28 = preprocess_data(x_train, x_test, y_train_14,
-                                                                                    y_train_28,
-                                                                                    y_test_14, y_test_28)
+    # x_train, x_test, y_train_14, y_train_28, y_test_14, y_test_28 = preprocess_data(x_train, x_test, y_train_14,
+    #                                                                                 y_train_28,
+    #                                                                                 y_test_14, y_test_28)
 
     # Convert to pytorch variables
     x_train, x_test, y_train_14, y_train_28, y_test_14, y_test_28 = convert_to_pytorch_tensors(x_train, x_test,
