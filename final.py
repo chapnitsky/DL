@@ -91,31 +91,31 @@ class HandGestureNet(torch.nn.Module):
 
         # Layers ----------------------------------------------
         self.all_conv_high = torch.nn.ModuleList([torch.nn.Sequential(
-            torch.nn.Conv2d(in_channels=1, out_channels=8, kernel_size=(7, 7), padding=3),
+            torch.nn.Conv1d(in_channels=1, out_channels=8, kernel_size=7, padding=3),
             torch.nn.ReLU(),
-            torch.nn.MaxPool2d(2),
+            torch.nn.AvgPool1d(2),
 
-            torch.nn.Conv2d(in_channels=8, out_channels=4, kernel_size=(7, 7), padding=3),
+            torch.nn.Conv1d(in_channels=8, out_channels=4, kernel_size=7, padding=3),
             torch.nn.ReLU(),
-            # torch.nn.MaxPool2d(2),
+            torch.nn.AvgPool1d(2),
 
-            torch.nn.Conv2d(in_channels=4, out_channels=4, kernel_size=(7, 7), padding=3),
+            torch.nn.Conv1d(in_channels=4, out_channels=4, kernel_size=7, padding=3),
             torch.nn.ReLU(),
-            torch.nn.MaxPool2d(2)
+            torch.nn.AvgPool1d(2)
         ) for joint in range(n_channels)])
 
         self.all_conv_low = torch.nn.ModuleList([torch.nn.Sequential(
-            torch.nn.Conv2d(in_channels=1, out_channels=8, kernel_size=(3, 3), padding=1),
+            torch.nn.Conv1d(in_channels=1, out_channels=8, kernel_size=3, padding=1),
             torch.nn.ReLU(),
-            torch.nn.MaxPool2d(2),
+            torch.nn.AvgPool1d(2),
 
-            torch.nn.Conv2d(in_channels=8, out_channels=4, kernel_size=(3, 3), padding=1),
+            torch.nn.Conv1d(in_channels=8, out_channels=4, kernel_size=3, padding=1),
             torch.nn.ReLU(),
-            # torch.nn.MaxPool2d(2),
+            torch.nn.AvgPool1d(2),
 
-            torch.nn.Conv2d(in_channels=4, out_channels=4, kernel_size=(3, 3), padding=1),
+            torch.nn.Conv1d(in_channels=4, out_channels=4, kernel_size=3, padding=1),
             torch.nn.ReLU(),
-            torch.nn.MaxPool2d(2)
+            torch.nn.AvgPool1d(2)
         ) for joint in range(n_channels)])
 
         self.all_residual = torch.nn.ModuleList([torch.nn.Sequential(
@@ -158,19 +158,19 @@ class HandGestureNet(torch.nn.Module):
         all_features = []
 
         for channel in range(0, self.n_channels):
-            input_channel = input[:, :, channel]
+            input_channel = input[:, :, channel, :]
 
             # Add a dummy (spatial) dimension for the time convolutions
             # Conv1D format : (batch_size, n_feature_maps, duration)
-            input_channel = input_channel.unsqueeze(3)
+            input_channel = input_channel.unsqueeze(1)
 
-            high = self.all_conv_high[channel](input_channel)
+            # high = self.all_conv_high[channel](input_channel)
             low = self.all_conv_low[channel](input_channel)
             ap_residual = self.all_residual[channel](input_channel)
 
             # Time convolutions are concatenated along the feature maps axis
             output_channel = torch.cat([
-                high,
+                # high,
                 low,
                 ap_residual
             ], dim=1)
@@ -400,6 +400,7 @@ if __name__ == '__main__':
     data_pd = load_data()
 
     data_transforms = transformers.Compose([
+        transformers.Resize((300, 300)),
         # Random Horizontal Flip
         transformers.RandomHorizontalFlip(0.5),
         # Random vertical flip
