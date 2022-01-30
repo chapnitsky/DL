@@ -7,6 +7,7 @@ import numpy
 import torch
 from torch.utils.data import Dataset, random_split
 import torchvision.transforms as transformers
+import torch.nn.functional as F
 from PIL import Image
 import pickle
 from scipy import ndimage
@@ -81,49 +82,46 @@ class HandGestureNet(torch.nn.Module):
         }
     """
 
-    def __init__(self, n_channels=66, n_classes=14, dropout_probability=0.2):
+    def __init__(self, n_channels=3, n_classes=10):
 
         super(HandGestureNet, self).__init__()
 
         self.n_channels = n_channels
         self.n_classes = n_classes
-        self.dropout_probability = dropout_probability
 
         # Layers ----------------------------------------------
         self.all_conv_high = torch.nn.ModuleList([torch.nn.Sequential(
-            torch.nn.Conv1d(in_channels=1, out_channels=8, kernel_size=(7, 7), padding=3),
+            torch.nn.Conv2d(in_channels=1, out_channels=8, kernel_size=(7, 7), padding=3),
             torch.nn.ReLU(),
-            torch.nn.AvgPool1d(2),
+            torch.nn.MaxPool2d(2),
 
-            torch.nn.Conv1d(in_channels=8, out_channels=4, kernel_size=(7, 7), padding=3),
+            torch.nn.Conv2d(in_channels=8, out_channels=4, kernel_size=(7, 7), padding=3),
             torch.nn.ReLU(),
-            torch.nn.AvgPool1d(2),
+            # torch.nn.MaxPool2d(2),
 
-            torch.nn.Conv1d(in_channels=4, out_channels=4, kernel_size=(7, 7), padding=3),
+            torch.nn.Conv2d(in_channels=4, out_channels=4, kernel_size=(7, 7), padding=3),
             torch.nn.ReLU(),
-            torch.nn.Dropout(p=self.dropout_probability),
-            torch.nn.AvgPool1d(2)
+            torch.nn.MaxPool2d(2)
         ) for joint in range(n_channels)])
 
         self.all_conv_low = torch.nn.ModuleList([torch.nn.Sequential(
-            torch.nn.Conv1d(in_channels=1, out_channels=8, kernel_size=(3, 3), padding=1),
+            torch.nn.Conv2d(in_channels=1, out_channels=8, kernel_size=(3, 3), padding=1),
             torch.nn.ReLU(),
-            torch.nn.AvgPool1d(2),
+            torch.nn.MaxPool2d(2),
 
-            torch.nn.Conv1d(in_channels=8, out_channels=4, kernel_size=(3, 3), padding=1),
+            torch.nn.Conv2d(in_channels=8, out_channels=4, kernel_size=(3, 3), padding=1),
             torch.nn.ReLU(),
-            torch.nn.AvgPool1d(2),
+            # torch.nn.MaxPool2d(2),
 
-            torch.nn.Conv1d(in_channels=4, out_channels=4, kernel_size=(3, 3), padding=1),
+            torch.nn.Conv2d(in_channels=4, out_channels=4, kernel_size=(3, 3), padding=1),
             torch.nn.ReLU(),
-            torch.nn.Dropout(p=self.dropout_probability),
-            torch.nn.AvgPool1d(2)
+            torch.nn.MaxPool2d(2)
         ) for joint in range(n_channels)])
 
         self.all_residual = torch.nn.ModuleList([torch.nn.Sequential(
-            torch.nn.AvgPool1d(2),
-            torch.nn.AvgPool1d(2),
-            torch.nn.AvgPool1d(2)
+            torch.nn.MaxPool2d(2),
+            torch.nn.MaxPool2d(2),
+            torch.nn.MaxPool2d(2)
         ) for joint in range(n_channels)])
 
         self.fc = torch.nn.Sequential(
@@ -137,7 +135,7 @@ class HandGestureNet(torch.nn.Module):
         # Xavier init
         for module in itertools.chain(self.all_conv_high, self.all_conv_low, self.all_residual):
             for layer in module:
-                if layer.__class__.__name__ == "Conv1d":
+                if layer.__class__.__name__ == "Conv2d":
                     torch.nn.init.xavier_uniform_(layer.weight, gain=torch.nn.init.calculate_gain('relu'))
                     torch.nn.init.constant_(layer.bias, 0.1)
 
@@ -164,7 +162,7 @@ class HandGestureNet(torch.nn.Module):
 
             # Add a dummy (spatial) dimension for the time convolutions
             # Conv1D format : (batch_size, n_feature_maps, duration)
-            input_channel = input_channel.unsqueeze(1)
+            input_channel = input_channel.unsqueeze(3)
 
             high = self.all_conv_high[channel](input_channel)
             low = self.all_conv_low[channel](input_channel)
@@ -451,7 +449,7 @@ if __name__ == '__main__':
     ####################################################################################
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = HandGestureNet(n_channels=66, n_classes=10).to(device)
+    model = HandGestureNet(n_channels=3, n_classes=10).to(device)
 
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(params=model.parameters(), lr=1e-3)
