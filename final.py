@@ -20,30 +20,6 @@ classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'index': 5
            'down': 9}
 
 
-class handsDataSet(Dataset):
-    def __init__(self, transformer, data_frame):
-        self.data = data_frame
-        self.transform = transformer
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, index):
-        img_id = self.data['img_id'][index]
-        typ = self.data['label'][index]
-
-        _indexes = [m.start() for m in re.finditer('_', img_id)]
-        person = int(img_id[_indexes[0] + 1: _indexes[1]])
-        path = f'{os.getcwd()}/hands/{person}'
-        dir = os.listdir(path)[typ]
-        path += f'/{dir}/{img_id}'
-
-        img = Image.open(path).convert('RGB')
-        img = self.transform(img)
-        label = torch.tensor(float(typ))
-
-        return img, label
-
 
 class HandGestureNet(torch.nn.Module):
     """
