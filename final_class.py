@@ -190,12 +190,9 @@ if __name__ == "__main__":
 
     classes = 10
     model = Net(num_classes=classes).to(device)
-
-    print(model)
-
     loss_criteria = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
-    epochs = 10
+    epochs = 30
     epoch_nums = []
     training_loss = []
     validation_loss = []
@@ -207,8 +204,8 @@ if __name__ == "__main__":
         training_loss.append(train_loss)
         validation_loss.append(test_loss)
 
-    torch.save(model.state_dict(), 'gesture_pretrained_model.pt')
-    model.load_state_dict(torch.load('gesture_pretrained_model.pt'))
+    torch.save(model.state_dict(), 'gesture_model.pt')
+    model.load_state_dict(torch.load('gesture_model.pt'))
     model.eval()
 
     # make predictions
