@@ -60,7 +60,6 @@ class Net(nn.Module):
         return torch.log_softmax(x, dim=1)
 
 
-# Get the iterative dataloaders for test and training data
 def load_data(folder_path='./hands', shap=(640, 240)):
     """
     Returns hand gesture sequences (X) and their associated labels (Y).
@@ -190,6 +189,7 @@ if __name__ == "__main__":
 
     classes = 10
     model = Net(num_classes=classes).to(device)
+    model.load_state_dict(torch.load('gesture_model.pt'))
     loss_criteria = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
     epochs = 30
@@ -205,15 +205,7 @@ if __name__ == "__main__":
         validation_loss.append(test_loss)
 
     torch.save(model.state_dict(), 'gesture_model.pt')
-    model.load_state_dict(torch.load('gesture_model.pt'))
     model.eval()
-
-    # make predictions
-    with torch.no_grad():
-        demo_gesture_batch = torch.randn(32, 100, 66)
-        predictions = model(demo_gesture_batch)
-        _, predictions = predictions.max(dim=1)
-        print("Predicted gesture classes: {}".format(predictions.tolist()))
 
     plt.figure(figsize=(15, 15))
     plt.plot(epoch_nums, training_loss)
@@ -222,3 +214,12 @@ if __name__ == "__main__":
     plt.ylabel('loss')
     plt.legend(['training', 'validation'], loc='upper right')
     plt.show()
+    
+    # make predictions
+    with torch.no_grad():
+        demo_gesture_batch = torch.randn(32, 100, 66)
+        predictions = model(demo_gesture_batch)
+        _, predictions = predictions.max(dim=1)
+        print("Predicted gesture classes: {}".format(predictions.tolist()))
+
+
