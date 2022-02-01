@@ -1,8 +1,6 @@
-
 import torch
 import torchvision
 import torchvision.transforms as trans
-# Load all the images
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
@@ -13,17 +11,11 @@ import shutil
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib import image as mp_image
-import seaborn as sns
-# %matplotlib inline
-# from google.colab import drive
-from sklearn import metrics
-from sklearn.metrics import accuracy_score, confusion_matrix
-from sklearn.model_selection import train_test_split
 from PIL import Image
 
-# Create resized copies of all of the source images
-size = (128,128)
+classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'index': 5, 'ok': 6, 'palm_moved': 7, 'c': 8,
+           'down': 9}
+
 
 
 class handsDataSet(Dataset):
@@ -46,9 +38,29 @@ class handsDataSet(Dataset):
 
         img = Image.open(path).convert('RGB')
         img = self.transform(img)
-        label = torch.tensor(float(typ))
+        label = torch.tensor(typ, dtype=torch.long)
 
         return img, label
+
+
+class Net(nn.Module):
+    # Defining the Constructor
+    def __init__(self, num_classes=2):
+        super(Net, self).__init__()
+        self.conv1 = nn.Conv2d(3, 10, kernel_size=3)
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=3)
+        self.fc1 = nn.Linear(in_features=18000, out_features=100)
+        self.fc2 = nn.Linear(in_features=100, out_features=num_classes)
+
+    def forward(self, x):
+        x = F.relu(F.max_pool2d(self.conv1(x), 2))
+        x = F.relu(F.max_pool2d(self.conv2(x), 2))
+        # print(x.shape)
+        x = x.view(-1, 18000)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        return torch.log_softmax(x, dim=1)
+
 
 # Get the iterative dataloaders for test and training data
 def load_data(folder_path='./hands', shap=(640, 240)):
@@ -80,80 +92,6 @@ def load_data(folder_path='./hands', shap=(640, 240)):
     data['label'] = labels
     data.to_csv('./data.csv', index=False)
     return data
-
-
-if __name__ == "__main__":
-
-    data_pd = load_data()
-    data_transforms = trans.Compose([
-            trans.Resize((300, 300)),
-            # Random Horizontal Flip
-            trans.RandomHorizontalFlip(0.5),
-            # Random vertical flip
-            trans.RandomVerticalFlip(0.3),
-            # transform to tensors
-            trans.ToTensor(),
-            # Normalize the pixel values (in R, G, and B channels)
-            trans.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-    ])
-
-    data_set = handsDataSet(data_frame=data_pd, transformer=data_transforms)
-
-    TRAIN_PERCENT = 0.8
-    total_len = len(data_set)
-    train_size = int(TRAIN_PERCENT * total_len)
-    test_size = int(total_len - train_size)
-
-    x_train, x_test = random_split(data_set, [train_size, test_size])
-
-    # training data , 40-image batches
-    train_loader = torch.utils.data.DataLoader(
-        x_train,
-        batch_size=40,
-        num_workers=0,
-        shuffle=True
-    )
-
-    #  testing data
-    test_loader = torch.utils.data.DataLoader(
-        x_test,
-        batch_size=40,
-        num_workers=0,
-        shuffle=True
-    )
-batch_size = train_loader.batch_size
-print("Data loaders ready to read", train_folder)
-
-
-# Create a neural net class
-class Net(nn.Module):
-    # Defining the Constructor
-    def __init__(self, num_classes=2):
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 10, kernel_size=3)
-        self.conv2 = nn.Conv2d(10, 20, kernel_size=3)
-        self.fc1 = nn.Linear(in_features=18000, out_features=100)
-        self.fc2 = nn.Linear(in_features=100, out_features=num_classes)
-
-    def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = F.relu(F.max_pool2d(self.conv2(x), 2))
-        # print(x.shape)
-        x = x.view(-1, 18000)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        return torch.log_softmax(x, dim=1)
-
-
-device = "cpu"
-if (torch.cuda.is_available()):
-    device = "cuda"
-classes = 2
-model = Net(num_classes=classes).to(device)
-
-print(model)
-
-loss_criteria = nn.CrossEntropyLoss()
 
 
 def train(model, device, train_loader, optimizer, epoch):
@@ -210,27 +148,76 @@ def test(model, device, test_loader):
     return avg_loss
 
 
-# Train over 10 epochs (We restrict to 10 for time issues)
-model = Net().to('cuda')
-optimizer = optim.Adam(model.parameters(), lr=1e-4)
-Device = "cuda"
-epochs = 10
-epoch_nums = []
-training_loss = []
-validation_loss = []
-print('Training on', device)
-for epoch in range(1, epochs + 1):
-    train_loss = train(model, device, train_loader, optimizer, epoch)
-    test_loss = test(model, device, test_loader)
-    epoch_nums.append(epoch)
-    training_loss.append(train_loss)
-    validation_loss.append(test_loss)
+if __name__ == "__main__":
+    size = (128, 128)
+    data_pd = load_data()
+    data_transforms = trans.Compose([
+        trans.Resize(size),
+        # Random Horizontal Flip
+        trans.RandomHorizontalFlip(0.5),
+        # Random vertical flip
+        trans.RandomVerticalFlip(0.3),
+        # transform to tensors
+        trans.ToTensor(),
+        # Normalize the pixel values (in R, G, and B channels)
+        trans.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+    ])
 
-plt.figure(figsize=(15, 15))
-plt.plot(epoch_nums, training_loss)
-plt.plot(epoch_nums, validation_loss)
-plt.xlabel('epoch')
-plt.ylabel('loss')
-plt.legend(['training', 'validation'], loc='upper right')
-plt.show()
+    data_set = handsDataSet(data_frame=data_pd, transformer=data_transforms)
 
+    TRAIN_PERCENT = 0.8
+    total_len = len(data_set)
+    train_size = int(TRAIN_PERCENT * total_len)
+    test_size = int(total_len - train_size)
+
+    x_train, x_test = random_split(data_set, [train_size, test_size])
+
+    # training data , 40-image batches
+    train_loader = torch.utils.data.DataLoader(
+        x_train,
+        batch_size=40,
+        num_workers=0,
+        shuffle=True
+    )
+
+    #  testing data
+    test_loader = torch.utils.data.DataLoader(
+        x_test,
+        batch_size=40,
+        num_workers=0,
+        shuffle=True
+    )
+    batch_size = train_loader.batch_size
+    print("Data loaders ready to read")
+
+    # Create a neural net class
+
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda"
+    classes = 10
+    model = Net(num_classes=classes).to(device)
+
+    print(model)
+
+    loss_criteria = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=1e-4)
+    epochs = 10
+    epoch_nums = []
+    training_loss = []
+    validation_loss = []
+    print('Training on', device)
+    for epoch in range(1, epochs + 1):
+        train_loss = train(model, device, train_loader, optimizer, epoch)
+        test_loss = test(model, device, test_loader)
+        epoch_nums.append(epoch)
+        training_loss.append(train_loss)
+        validation_loss.append(test_loss)
+
+    plt.figure(figsize=(15, 15))
+    plt.plot(epoch_nums, training_loss)
+    plt.plot(epoch_nums, validation_loss)
+    plt.xlabel('epoch')
+    plt.ylabel('loss')
+    plt.legend(['training', 'validation'], loc='upper right')
+    plt.show()

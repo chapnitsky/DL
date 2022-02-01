@@ -20,7 +20,6 @@ classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'index': 5
            'down': 9}
 
 
-
 class HandGestureNet(torch.nn.Module):
     """
     [Devineau et al., 2018] Deep Learning for Hand Gesture Recognition on Skeletal Data
