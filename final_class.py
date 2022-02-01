@@ -17,7 +17,6 @@ classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'index': 5
            'down': 9}
 
 
-
 class handsDataSet(Dataset):
     def __init__(self, transformer, data_frame):
         self.data = data_frame
@@ -187,14 +186,9 @@ if __name__ == "__main__":
         num_workers=0,
         shuffle=True
     )
-    batch_size = train_loader.batch_size
-    print("Data loaders ready to read")
 
-    # Create a neural net class
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    device = "cpu"
-    if torch.cuda.is_available():
-        device = "cuda"
     classes = 10
     model = Net(num_classes=classes).to(device)
 
@@ -213,6 +207,17 @@ if __name__ == "__main__":
         epoch_nums.append(epoch)
         training_loss.append(train_loss)
         validation_loss.append(test_loss)
+
+    torch.save(model.state_dict(), 'gesture_pretrained_model.pt')
+    model.load_state_dict(torch.load('gesture_pretrained_model.pt'))
+    model.eval()
+
+    # make predictions
+    with torch.no_grad():
+        demo_gesture_batch = torch.randn(32, 100, 66)
+        predictions = model(demo_gesture_batch)
+        _, predictions = predictions.max(dim=1)
+        print("Predicted gesture classes: {}".format(predictions.tolist()))
 
     plt.figure(figsize=(15, 15))
     plt.plot(epoch_nums, training_loss)

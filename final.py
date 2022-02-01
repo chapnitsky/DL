@@ -286,88 +286,60 @@ def get_accuracy(model, x, y_ref):
     return acc
 
 
-#
-# def train(model, criterion, optimizer,
-#           x_train, y_train, x_test, y_test,
-#           force_cpu=False, num_epochs=5):
-#     # use a GPU (for speed) if you have one
-#     device = torch.device("cuda") if torch.cuda.is_available() and not force_cpu else torch.device("cpu")
-#     model = model.to(device)
-#     x_train, y_train, x_test, y_test = x_train.to(device), y_train.to(device), x_test.to(device), y_test.to(device)
-#
-#     # (bonus) log accuracy values to visualize them in tensorboard:
-#
-#     # Prepare all mini-batches
-#     x_train_batches = batch(x_train)
-#     y_train_batches = batch(y_train)
-#
-#     # Training starting time
-#     start = time.time()
-#
-#     print('[INFO] Started to train the model.')
-#     print('Training the model on {}.'.format('GPU' if device == torch.device('cuda') else 'CPU'))
-#
-#     for ep in range(num_epochs):
-#
-#         # Ensure we're still in training mode
-#         model.train()
-#
-#         current_loss = 0.0
-#
-#         for idx_batch, train_batches in enumerate(zip(x_train_batches, y_train_batches)):
-#             # get a mini-batch of sequences
-#             x_train_batch, y_train_batch = train_batches
-#
-#             # zero the gradient parameters
-#             optimizer.zero_grad()
-#
-#             # forward
-#             outputs = model(x_train_batch)
-#
-#             # backward + optimize
-#             # backward
-#             loss = criterion(outputs, y_train_batch)
-#             loss.backward()
-#             # optimize
-#             optimizer.step()
-#             # for an easy access
-#             current_loss += loss.item()
-#
-#         train_acc = get_accuracy(model, x_train, y_train)
-#         test_acc = get_accuracy(model, x_test, y_test)
-#
-#         print(
-#             'Epoch #{:03d} | Time elapsed : {} | Loss : {:.4e} | Accuracy_train : {:.4e} | Accuracy_test : {:.4e}'.format(
-#                 ep + 1, time_since(start), current_loss, train_acc, test_acc))
-#
-#     print('[INFO] Finished training the model. Total time : {}.'.format(time_since(start)))
-#
+def train(model, criterion, optimizer,
+          x_train, y_train, x_test, y_test,
+          force_cpu=False, num_epochs=5):
+    # use a GPU (for speed) if you have one
+    device = torch.device("cuda") if torch.cuda.is_available() and not force_cpu else torch.device("cpu")
+    model = model.to(device)
+    x_train, y_train, x_test, y_test = x_train.to(device), y_train.to(device), x_test.to(device), y_test.to(device)
 
-def train(model, device, train_loader, optimizer, criterion, epoch):
-    # Set the model to training mode
-    model.train()
-    train_loss = 0
-    print("Epoch:", epoch)
-    # Process the images in batches
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
-        optimizer.zero_grad()  # Reset the optimizer
-        # Push the data forward through the model layers
-        output = model(data)
-        # Get the loss
-        loss = criterion(output, target)
-        # Keep a running total
-        train_loss += loss.item()
-        # Backpropagate
-        loss.backward()
-        optimizer.step()
-        # Print metrics so we see some progress
-        print('\tTraining batch {} Loss: {:.6f}'.format(batch_idx + 1, loss.item()))
+    # (bonus) log accuracy values to visualize them in tensorboard:
 
-    # return average loss for the epoch
-    avg_loss = train_loss / (batch_idx + 1)
-    print('Training set: Average loss: {:.6f}'.format(avg_loss))
-    return avg_loss
+    # Prepare all mini-batches
+    x_train_batches = batch(x_train)
+    y_train_batches = batch(y_train)
+
+    # Training starting time
+    start = time.time()
+
+    print('[INFO] Started to train the model.')
+    print('Training the model on {}.'.format('GPU' if device == torch.device('cuda') else 'CPU'))
+
+    for ep in range(num_epochs):
+
+        # Ensure we're still in training mode
+        model.train()
+
+        current_loss = 0.0
+
+        for idx_batch, train_batches in enumerate(zip(x_train_batches, y_train_batches)):
+            # get a mini-batch of sequences
+            x_train_batch, y_train_batch = train_batches
+
+            # zero the gradient parameters
+            optimizer.zero_grad()
+
+            # forward
+            outputs = model(x_train_batch)
+
+            # backward + optimize
+            # backward
+            loss = criterion(outputs, y_train_batch)
+            loss.backward()
+            # optimize
+            optimizer.step()
+            # for an easy access
+            current_loss += loss.item()
+
+        train_acc = get_accuracy(model, x_train, y_train)
+        test_acc = get_accuracy(model, x_test, y_test)
+
+        print(
+            'Epoch #{:03d} | Time elapsed : {} | Loss : {:.4e} | Accuracy_train : {:.4e} | Accuracy_test : {:.4e}'.format(
+                ep + 1, time_since(start), current_loss, train_acc, test_acc))
+
+    print('[INFO] Finished training the model. Total time : {}.'.format(time_since(start)))
 
 
 if __name__ == '__main__':
