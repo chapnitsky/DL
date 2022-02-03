@@ -55,8 +55,10 @@ class Net(nn.Module):
         self.conv1.bias.data.fill_(0.01)
         self.conv2.bias.data.fill_(0.01)
 
-        self.fc1 = nn.Linear(in_features=18000, out_features=100)
-        self.fc2 = nn.Linear(in_features=100, out_features=num_classes)
+        self.fc1 = nn.Linear(in_features=18000, out_features=9000)
+        self.fc2 = nn.Linear(in_features=9000, out_features=100)
+        self.fc3 = nn.Linear(in_features=100, out_features=num_classes)
+
 
     def forward(self, x):
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
@@ -64,6 +66,8 @@ class Net(nn.Module):
         x = x.view(-1, 18000)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+
         return torch.log_softmax(x, dim=1)
 
 
@@ -199,10 +203,10 @@ if __name__ == "__main__":
 
     classes = 10
     model = Net(num_classes=classes).to(device)
-    model.load_state_dict(torch.load('gesture_model.pt'))
+    # model.load_state_dict(torch.load('gesture_model.pt'))
     loss_criteria = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-4)
-    epochs = 25
+    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    epochs = 10
     epoch_nums = []
     training_loss = []
     test_los = []
@@ -215,6 +219,7 @@ if __name__ == "__main__":
         test_los.append(test_loss)
 
     torch.save(model.state_dict(), 'gesture_model.pt')
+    model.eval()
 
     plt.figure(figsize=(15, 15))
     plt.plot(epoch_nums, training_loss)
