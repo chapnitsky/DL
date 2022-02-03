@@ -48,6 +48,13 @@ class Net(nn.Module):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(3, 10, kernel_size=(3, 3))
         self.conv2 = nn.Conv2d(10, 20, kernel_size=(3, 3))
+
+        nn.init.xavier_uniform_(self.conv1.weight)
+        nn.init.xavier_uniform_(self.conv2.weight)
+
+        self.conv1.bias.data.fill_(0.01)
+        self.conv2.bias.data.fill_(0.01)
+
         self.fc1 = nn.Linear(in_features=18000, out_features=100)
         self.fc2 = nn.Linear(in_features=100, out_features=num_classes)
 
@@ -133,11 +140,14 @@ def test(model, device, test_loader):
             # Calculate the loss for this batch
             test_loss += loss_criteria(output, target).item()
             # Calculate the accuracy for this batch
+
+            # make predictions
+
             _, predicted = torch.max(output.data, 1)
             correct += torch.sum(target == predicted).item()
             # Calculate the average loss and total accuracy for this epoch
             avg_loss = test_loss / batch_count
-            print('Validation set: Average loss: {:.6f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+            print('Test set: Average loss: {:.6f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
                 avg_loss, correct, len(test_loader.dataset),
                 100. * correct / len(test_loader.dataset)))
 
@@ -192,34 +202,26 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load('gesture_model.pt'))
     loss_criteria = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
-    epochs = 30
+    epochs = 20
     epoch_nums = []
     training_loss = []
-    validation_loss = []
+    test_los = []
     print('Training on', device)
     for epoch in range(1, epochs + 1):
         train_loss = train(model, device, train_loader, optimizer, epoch)
         test_loss = test(model, device, test_loader)
         epoch_nums.append(epoch)
         training_loss.append(train_loss)
-        validation_loss.append(test_loss)
+        test_los.append(test_loss)
 
     torch.save(model.state_dict(), 'gesture_model.pt')
-    model.eval()
 
     plt.figure(figsize=(15, 15))
     plt.plot(epoch_nums, training_loss)
-    plt.plot(epoch_nums, validation_loss)
+    plt.plot(epoch_nums, test_los)
     plt.xlabel('epoch')
     plt.ylabel('loss')
-    plt.legend(['training', 'validation'], loc='upper right')
+    plt.legend(['training', 'test'], loc='upper right')
     plt.show()
-    
-    # make predictions
-    with torch.no_grad():
-        demo_gesture_batch = torch.randn(32, 100, 66)
-        predictions = model(demo_gesture_batch)
-        _, predictions = predictions.max(dim=1)
-        print("Predicted gesture classes: {}".format(predictions.tolist()))
 
 
