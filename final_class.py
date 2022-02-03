@@ -55,9 +55,8 @@ class Net(nn.Module):
         self.conv1.bias.data.fill_(0.01)
         self.conv2.bias.data.fill_(0.01)
 
-        self.fc1 = nn.Linear(in_features=18000, out_features=9000)
-        self.fc2 = nn.Linear(in_features=9000, out_features=100)
-        self.fc3 = nn.Linear(in_features=100, out_features=num_classes)
+        self.fc1 = nn.Linear(in_features=18000, out_features=100)
+        self.fc2 = nn.Linear(in_features=100, out_features=num_classes)
 
     def forward(self, x):
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
@@ -65,8 +64,6 @@ class Net(nn.Module):
         x = x.view(-1, 18000)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-
         return torch.log_softmax(x, dim=1)
 
 
