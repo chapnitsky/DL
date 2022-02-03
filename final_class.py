@@ -201,7 +201,7 @@ if __name__ == "__main__":
     model = Net(num_classes=classes).to(device)
     # model.load_state_dict(torch.load('gesture_model.pt'))
     loss_criteria = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = optim.Adam(model.parameters(), lr=1e-4)
     epochs = 10
     epoch_nums = []
     training_loss = []
