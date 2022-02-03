@@ -59,7 +59,6 @@ class Net(nn.Module):
         self.fc2 = nn.Linear(in_features=9000, out_features=100)
         self.fc3 = nn.Linear(in_features=100, out_features=num_classes)
 
-
     def forward(self, x):
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
         x = F.relu(F.max_pool2d(self.conv2(x), 2))
@@ -228,5 +227,3 @@ if __name__ == "__main__":
     plt.ylabel('loss')
     plt.legend(['training', 'test'], loc='upper right')
     plt.show()
-
-
