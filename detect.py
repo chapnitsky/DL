@@ -118,7 +118,9 @@ def SwitchCap(CapVideo,path):
 if __name__ =='__main__':
     
     # imagePath = './Assets/test.png'
-    imagePath = './Assets/video_test.mp4'
+    # imagePath = './Assets/video_test.mp4'
+    imagePath = './Assets/test2.mp4'
+
     NetPath = './gesture_model.pt'    
     Classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'index': 5, 'ok': 6, 'palm_moved': 7, 'c': 8,
            'down': 9}
@@ -172,8 +174,9 @@ if __name__ =='__main__':
         ret, img = cap.read()
         #img  = cv2.imread(imagePath)
         normalized = Normalize(img)
-        
-        #[2]
+        cv2.imshow("norm", normalized)
+
+    #[2]
         #feed and get prediction from the net
         pred = getPrediction(normalized,model,imagePath)
         
