@@ -221,7 +221,7 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     classes = 8
     model = Net(num_classes=classes).to(device)
-    model.load_state_dict(torch.load(percent_98))
+    # model.load_state_dict(torch.load(percent_98))  # Loading the trained one already, use it if you would like to
     loss_criteria = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
     epochs = 10
