@@ -168,7 +168,7 @@ def test(model, device, test_loader, n_classes, epoc):
             print('Test set {}:\n\tAverage loss: {:.6f}'.format(
                 batch_count, avg_loss))
 
-            percent = "{:.0f}".format(100. * correct / len(test_loader.dataset))
+            percent = "{:.1f}".format(100. * correct / len(test_loader.dataset))
             print(f'\tAccuracy: {correct}/{len(test_loader.dataset)} (' + "\033[92m" + percent + "\033[0m" + '%)\n')
 
     arr = confusion_matrix.cpu().detach().numpy()
