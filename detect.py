@@ -87,10 +87,9 @@ def getPrediction(N_Image,loaded_model,ImagePath):
    
 
 
-def loadModel(Path):
-    classes = 10
+def loadModel(Path,Class_amount = 10):
     LoadMod  = torch.load(Path)
-    model = Net(num_classes=classes).to('cpu')
+    model = Net(num_classes=Class_amount).to('cpu')
     model.load_state_dict(LoadMod)
     return model
 
@@ -116,28 +115,29 @@ def SwitchCap(CapVideo,path):
 
 
 if __name__ =='__main__':
-    
-    # imagePath = './Assets/test.png'
-    # imagePath = './Assets/video_test.mp4'
-    imagePath = './Assets/test2.mp4'
 
-    NetPath = './gesture_model.pt'    
-    Classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'index': 5, 'ok': 6, 'palm_moved': 7, 'c': 8,
-           'down': 9}
-    pred_Classes = {value : key for (key, value) in Classes.items()}
-
-
-    #[1] getting the custom  model 
-    model = loadModel(NetPath)
-    
     
     #=================================================================================
     #                                    Control Variables 
     #=================================================================================
 
 
+
+    
+    imagePath = './Assets/video_test.mp4'
+    NetPath = './NetPerfomance/73_model_8.pt'    
+
+
+    ClassAmount = 8
+    Classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'index': 5, 'ok': 6, 'palm_moved': 7, 'c': 8,'down': 9}
+    pred_Classes = {value : key for (key, value) in Classes.items()}
+
+
+
+    
+
     # start frame/FPS
-    count = 0
+    count = 1
     FPs = 4
 
 
@@ -156,14 +156,16 @@ if __name__ =='__main__':
     CapVideo = True
 
 
-    
+
+    #[1] getting the custom  model 
+    model = loadModel(NetPath,ClassAmount)
+
+
     #[2] start the rending of the video
-    
     cap = cv2.VideoCapture(imagePath)
-    # cap =SwitchCap(CapVideo,imagePath)
 
     while True:
-    # for i in range(1):
+        
         #[0]
         #update the the capture
         cap.set(cv2.CAP_PROP_POS_FRAMES, count)
@@ -172,33 +174,40 @@ if __name__ =='__main__':
         #[1]
         #read and normilze the image
         ret, img = cap.read()
-        #img  = cv2.imread(imagePath)
+        original = img.copy()
         normalized = Normalize(img)
-        cv2.imshow("norm", normalized)
+        
 
-    #[2]
+
+        #[2]
         #feed and get prediction from the net
         pred = getPrediction(normalized,model,imagePath)
         
         
         #[3]
         #plot results 
-        # print(pred)
+
         x = pred.item()
         Pred_T = 'The class = {}'.format(pred_Classes[x])
+        
+        
+        #[4]
+        #output the predictions
         print('the prediction out of the net : "{}", the class : "{}"'.format(x, pred_Classes[x]))
         cv2.putText(img, Pred_T, org, font, T_Font, Color, thickness, cv2.LINE_AA)
                 #cv2.putText(img,Pred_T,(x+ (w/2) ,y-font_scale),font,font_scale,NMask_C,thickness,cv2.LINE_AA)
         # cv2.rectangle(img, org, (300,300), Color, 2)
                 
-        # print(Classes[x])
-        # print(type(x))
-        # x = torch.tensor([3])
-        # x.item()
-        cv2.imshow("test",img)
+
+        cv2.imshow('Original_Input',original)
+        cv2.imshow("Output",img)
+        cv2.imshow("Normalized", normalized)
+        
+        
+        #[5]
+        #switch case
         
         k= cv2.waitKey(30) & 0xff
-        #print(k)
         if k== 97: 
             FPs-=1
             if FPs<=0 :
