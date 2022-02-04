@@ -226,7 +226,7 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load(percent_98))  # Loading the trained one already, use it if you would like to
     loss_criteria = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
-    epochs = 1
+    epochs = 10
     epoch_nums = []
     training_loss = []
     test_los = []
@@ -234,11 +234,11 @@ if __name__ == "__main__":
     wrongs = []
     print('Training on', device)
     for epoch in range(1, epochs + 1):
-        # train_loss = train(model, device, train_loader, optimizer, epoch)
+        train_loss = train(model, device, train_loader, optimizer, epoch)
         test_loss, conf_mat, wrong = test(model, device, test_loader, classes, epoch)
         epoch_nums.append(epoch)
         wrongs.extend(wrong)
-        # training_loss.append(train_loss)
+        training_loss.append(train_loss)
         test_los.append(test_loss)
         confusion_mats.append(conf_mat)
 
@@ -264,7 +264,7 @@ if __name__ == "__main__":
         plt.show()
 
     plt.figure(figsize=(15, 15))
-    # plt.plot(epoch_nums, training_loss)
+    plt.plot(epoch_nums, training_loss)
     plt.plot(epoch_nums, test_los)
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
