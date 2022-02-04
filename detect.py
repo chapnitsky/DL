@@ -147,10 +147,10 @@ if __name__ =='__main__':
     #visualization controls
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 1
-    T_Font = 0.5
+    T_Font = 1.25
     org = (30, 30)
     Color = (240,40,70) 
-    thickness = 0
+    thickness = 3
     CapVideo = True
 
 
@@ -182,7 +182,12 @@ if __name__ =='__main__':
         #plot results 
         # print(pred)
         x = pred.item()
+        Pred_T = 'The class = {}'.format(pred_Classes[x])
         print('the prediction out of the net : "{}", the class : "{}"'.format(x, pred_Classes[x]))
+        cv2.putText(img, Pred_T, org, font, T_Font, Color, thickness, cv2.LINE_AA)
+                #cv2.putText(img,Pred_T,(x+ (w/2) ,y-font_scale),font,font_scale,NMask_C,thickness,cv2.LINE_AA)
+        # cv2.rectangle(img, org, (300,300), Color, 2)
+                
         # print(Classes[x])
         # print(type(x))
         # x = torch.tensor([3])
