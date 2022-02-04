@@ -49,17 +49,7 @@ def Normalize(image,size= 128):
 
 
 def getPrediction(N_Image,loaded_model,ImagePath):
-    
-    # image_Tensore = torch.from_numpy(N_Image)
-    # image_Tensore = loader(N_Image).float()
-    
-    
-    # test_loader = torch.utils.data.DataLoader(
-    #     [N_Image],
-    #     batch_size=1,
-    #     num_workers=0,
-    #     shuffle=False
-    # )
+
     data_transforms = trans.Compose([
         trans.Resize((128,128)),
         # Random Horizontal Flip
@@ -75,20 +65,10 @@ def getPrediction(N_Image,loaded_model,ImagePath):
         TestImage = data_transforms(TestImage).float()
         # TestImage = TestImage.unsqueeze(0)
         output  = loaded_model(TestImage[None,...])
-        print(output.data)
+        #print(output.data)
         _, predicted = torch.max(output.data, 1)
         return predicted
-        # for data in test_loader:
-        #     data = data.to('cpu')
-        #     # Get the predicted classes for this batch
-        #     output = model(data)
-        #     # Calculate the loss for this batch
-            
-        #     _, predicted = torch.max(output.data, 1)
-        #     return predicted
-    
-    
-    # return average loss for the epoch
+
    
 
 
