@@ -135,9 +135,6 @@ if __name__ =='__main__':
     pred_Classes = {value : key for (key, value) in Classes.items()}
 
 
-
-    
-
     # start frame/FPS
     count = 1
     FPs = 4
