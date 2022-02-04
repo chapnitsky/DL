@@ -160,14 +160,14 @@ def test(model, device, test_loader, n_classes, epoc):
 
             # Calculate the average loss and total accuracy for this epoch
             avg_loss = test_loss / batch_count
-            print('Test set: Average loss: {:.6f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-                avg_loss, correct, len(test_loader.dataset),
+            print('Test set {}: Average loss: {:.6f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+                batch_count, avg_loss, correct, len(test_loader.dataset),
                 100. * correct / len(test_loader.dataset)))
 
     # return average loss for the epoch
     # print(confusion_matrix)
+    arr = confusion_matrix.cpu().detach().numpy()
     if epoc == 10:
-        arr = confusion_matrix.cpu().detach().numpy()
         fig, ax = plt.subplots()
         ax.matshow(arr)
         plt.ylabel('Real Class')
@@ -178,7 +178,7 @@ def test(model, device, test_loader, n_classes, epoc):
         plt.show()
         print(confusion_matrix.diag() / confusion_matrix.sum(1))
 
-    return avg_loss
+    return avg_loss, arr
 
 
 if __name__ == "__main__":
@@ -232,13 +232,15 @@ if __name__ == "__main__":
     epoch_nums = []
     training_loss = []
     test_los = []
+    confusion_mats = []
     print('Training on', device)
     for epoch in range(1, epochs + 1):
         train_loss = train(model, device, train_loader, optimizer, epoch)
-        test_loss = test(model, device, test_loader, classes, epoch)
+        test_loss, conf_mat = test(model, device, test_loader, classes, epoch)
         epoch_nums.append(epoch)
         training_loss.append(train_loss)
         test_los.append(test_loss)
+        confusion_mats.append(conf_mat)
 
     torch.save(model.state_dict(), 'gesture_model.pt')
     model.eval()
