@@ -13,6 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
 
+
 classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'palm_moved': 5, 'c': 6,
            'down': 7}
 
@@ -126,11 +127,11 @@ def train(model, device, train_loader, optimizer, epoch):
         loss.backward()
         optimizer.step()
         # Print metrics so we see some progress
-        print('\tTraining batch {} Loss: {:.6f}'.format(batch_idx + 1, loss.item()))
+        print('\n\tTraining batch {}:\n\t\tLoss: {:.6f}'.format(batch_idx + 1, loss.item()))
 
     # return average loss for the epoch
     avg_loss = train_loss / (batch_idx + 1)
-    print('Training set: Average loss: {:.6f}'.format(avg_loss))
+    print('\n\tTraining set:\n\t\tAverage loss: {:.6f}'.format(avg_loss))
     return avg_loss
 
 
@@ -140,7 +141,7 @@ def test(model, device, test_loader, n_classes, epoc):
     test_loss = 0
     correct = 0
     confusion_matrix = torch.zeros(n_classes, n_classes)
-
+    wrong_images = []
     with torch.no_grad():
         batch_count = 0
         for data, target in test_loader:
@@ -154,21 +155,26 @@ def test(model, device, test_loader, n_classes, epoc):
 
             # make predictions
             _, predicted = torch.max(output.data, 1)
-            for t, p in zip(target.view(-1), predicted.view(-1)):
+            for index, (t, p) in enumerate(zip(target.view(-1), predicted.view(-1))):
                 confusion_matrix[t.long(), p.long()] += 1
-
+                real = t.item()
+                pred = p.item()
+                if real != pred:
+                    wrong_images.append((data[index], real, pred))
             correct += torch.sum(target == predicted).item()
 
             # Calculate the average loss and total accuracy for this epoch
             avg_loss = test_loss / batch_count
-            print('Test set {}: Average loss: {:.6f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-                batch_count, avg_loss, correct, len(test_loader.dataset),
-                100. * correct / len(test_loader.dataset)))
+            print('Test set {}:\n\tAverage loss: {:.6f}'.format(
+                batch_count, avg_loss))
+
+            percent = "{:.0f}".format(100. * correct / len(test_loader.dataset))
+            print(f'\tAccuracy: {correct}/{len(test_loader.dataset)} (' + "\033[92m" + percent + "\033[0m" + '%)\n')
 
     arr = confusion_matrix.cpu().detach().numpy()
     # print(confusion_matrix.diag() / confusion_matrix.sum(1))
 
-    return avg_loss, arr
+    return avg_loss, arr, wrong_images
 
 
 if __name__ == "__main__":
@@ -211,11 +217,11 @@ if __name__ == "__main__":
         shuffle=True
     )
 
+    percent_98 = './NetPerfomance/98_model_8.pt'
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
     classes = 8
     model = Net(num_classes=classes).to(device)
-    # model.load_state_dict(torch.load('./gesture_model.pt'))
+    model.load_state_dict(torch.load(percent_98))
     loss_criteria = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
     epochs = 10
@@ -223,11 +229,13 @@ if __name__ == "__main__":
     training_loss = []
     test_los = []
     confusion_mats = []
+    wrongs = []
     print('Training on', device)
     for epoch in range(1, epochs + 1):
         train_loss = train(model, device, train_loader, optimizer, epoch)
-        test_loss, conf_mat = test(model, device, test_loader, classes, epoch)
+        test_loss, conf_mat, wrong = test(model, device, test_loader, classes, epoch)
         epoch_nums.append(epoch)
+        wrongs.extend(wrong)
         training_loss.append(train_loss)
         test_los.append(test_loss)
         confusion_mats.append(conf_mat)
