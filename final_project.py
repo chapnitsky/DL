@@ -1,6 +1,4 @@
-import numpy
 import torch
-import torchvision
 import torchvision.transforms as trans
 import torch.nn as nn
 import torch.optim as optim
@@ -8,7 +6,6 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, random_split
 import re
 import os
-import shutil
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -168,7 +165,6 @@ def test(model, device, test_loader, n_classes, epoc):
             print(f'\tAccuracy: {correct}/{len(test_loader.dataset)} (' + "\033[92m" + percent + "\033[0m" + '%)\n')
 
     arr = confusion_matrix.cpu().detach().numpy()
-    # print(confusion_matrix.diag() / confusion_matrix.sum(1))
 
     return avg_loss, arr, wrong_images
 
@@ -236,7 +232,7 @@ if __name__ == "__main__":
         test_los.append(test_loss)
         confusion_mats.append(conf_mat)
 
-    torch.save(model.state_dict(), 'gesture_model.pt')
+    torch.save(model.state_dict(), 'gesture_model.pt')  # Saving current temporary model
     num_wrongs_to_disp = 5
     for i in range(num_wrongs_to_disp):
         pred_typ = rev_classes[int(wrongs[i][2])]

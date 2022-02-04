@@ -27,7 +27,7 @@ import seaborn as sns
 
 import PIL.Image as Image
 from PIL import Image as PilConvert
-from final_class import Net
+from final_project import Net
 
 
 #==============================================================================================
@@ -270,7 +270,3 @@ if __name__ =='__main__':
                 
     except:
         print('the video has ended')
-            
-        
-        
-    
