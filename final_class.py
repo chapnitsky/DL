@@ -91,7 +91,7 @@ def load_data(folder_path='./hands', shap=(640, 240)):
 
                     _indexes = [m.start() for m in re.finditer('_', png)]
                     label = int(png[_indexes[1] + 1: _indexes[2]]) - 1
-                    if label in [5, 6]:  # Pass the index finger and ok gesture due to vertical & horizontal rotation via transformer
+                    if label in [5, 6]:  # Ignore and pass the index finger and ok gesture due to vertical & horizontal rotation via transformer
                         break
 
                     if label not in [0, 1, 2, 3, 4]:  # Reconstruct labels types
@@ -226,7 +226,7 @@ if __name__ == "__main__":
 
     classes = 8
     model = Net(num_classes=classes).to(device)
-    # model.load_state_dict(torch.load('./NetPerfomance/75_model.pt'))
+    # model.load_state_dict(torch.load('./gesture_model.pt'))
     loss_criteria = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
     epochs = 10
