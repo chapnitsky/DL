@@ -116,15 +116,25 @@ def SwitchCap(CapVideo,path):
 
 def AppendGesture(img,Gesture,HandPath):
 
+    scale_percent =150
+    x_offset = 30
+    y_offset = 40
+        
     try:
         path = HandPath+''+Gesture+'.png'
         Hand = imread(path,cv2.IMREAD_UNCHANGED)
-        scale_percent =40
+        
         width = int(Hand.shape[1] * scale_percent / 100)
         height = int(Hand.shape[0] * scale_percent / 100)
         dim = (width, height)
-        Hand = cv2.resize(Hand, dim, interpolation = cv2.INTER_AREA)
-        cv2.imshow('',Hand)
+        # Hand = cv2.resize(Hand, dim, interpolation = cv2.INTER_AREA)
+        # cv2.imshow('',Hand)
+        # blended = cv2.addWeighted(img, 0.5, Hand, 0.5, 0)
+        
+        x_end = x_offset + Hand.shape[1]
+        y_end = y_offset + Hand.shape[0]
+        img[y_offset:y_end,x_offset:x_end] = Hand
+        return img
     except:
         pass
 
@@ -146,7 +156,7 @@ if __name__ =='__main__':
     
     imagePath = './Assets/video_test.mp4'
     NetPath = './NetPerfomance/98_model_8.pt'    
-    HAndsDir = './Assets/Hands/'
+    HAndsDir = './Assets/'
 
 
     ClassAmount = 8
@@ -172,8 +182,9 @@ if __name__ =='__main__':
     T_Font = 1.25
     org = (30, 30)
     Color = (240,40,70) 
-    thickness = 3
+    thickness = 2
     CapVideo = True
+    offset = 20
 
 
 
@@ -184,71 +195,82 @@ if __name__ =='__main__':
     #[2] start the rending of the video
     cap = cv2.VideoCapture(imagePath)
 
-    while True:
-        
-        #[0]
-        #update the the capture
-        cap.set(cv2.CAP_PROP_POS_FRAMES, count)
-        count+=FPs
-
-        #[1]
-        #read and normilze the image
-        ret, img = cap.read()
-        original = img.copy()
-        normalized = Normalize(img)
-        
-
-
-        #[2]
-        #feed and get prediction from the net
-        pred = getPrediction(normalized,model,imagePath)
-        
-        
-        #[3]
-        #plot results 
-
-        x = pred.item()
-        Gesture= pred_Classes[x]
-        Pred_T = 'The class = {}'.format(Gesture)
-        
-        
-        #[4]
-        #output the predictions
-        print('the prediction out of the net : "{}", the class : "{}"'.format(x, pred_Classes[x]))
-        cv2.putText(img, Pred_T, org, font, T_Font, Color, thickness, cv2.LINE_AA)
-                #cv2.putText(img,Pred_T,(x+ (w/2) ,y-font_scale),font,font_scale,NMask_C,thickness,cv2.LINE_AA)
-        # cv2.rectangle(img, org, (300,300), Color, 2)
-                
-
-        cv2.imshow('Original_Input',original)
-        cv2.imshow("Output",img)
-        cv2.imshow("Normalized", normalized)
-        AppendGesture('',Gesture,HAndsDir)
-        
-        
-        #[5]
-        #switch case
-        
-        k= cv2.waitKey(30) & 0xff
-        if k== 97: 
-            FPs-=1
-            if FPs<=0 :
-                Fps = 1
-
-        elif k==100:
-            FPs+=1
-            if FPs>30:
-                Fps = 30 
-                
-        elif k == 32:
-            cap.release()
-            cap =SwitchCap(CapVideo,imagePath) 
-            CapVideo = not CapVideo
+    try:
+        while True:
             
-    
-    cap.release()
-    cv2.destroyAllWindows()
-        
+            #[0]
+            #update the the capture
+            cap.set(cv2.CAP_PROP_POS_FRAMES, count)
+            count+=FPs
+
+            #[1]
+            #read and normilze the image
+            ret, img = cap.read()
+            original = img.copy()
+            normalized = Normalize(img)
+            
+
+
+            #[2]
+            #feed and get prediction from the net
+            pred = getPrediction(normalized,model,imagePath)
+            
+            
+            #[3]
+            #plot results 
+
+            x = pred.item()
+            Gesture= pred_Classes[x]
+            Pred_T = 'The class = {}'.format(Gesture)
+            Switch_T = 'press space to switch input to webacam'
+            Speed_T = 'press A,D in order to speed/slow the video'
+            end1 = (int(offset),img.shape[0]-offset)
+            end2 =(int(offset),img.shape[0]-3*offset)
+            
+            
+            #[4]
+            #output the predictions
+            print('the prediction out of the net : "{}", the class : "{}"'.format(x, pred_Classes[x]))
+            cv2.putText(img, Pred_T, org, font, T_Font, (255,255,255), thickness+4, cv2.LINE_AA)
+            cv2.putText(img, Pred_T, org, font, T_Font, (0,0,0), thickness, cv2.LINE_AA)
+            cv2.putText(img, Switch_T,end1 , font, T_Font-0.7,  (255,255,255), thickness+4, cv2.LINE_AA)
+            cv2.putText(img, Switch_T,end1 , font, T_Font-0.7, (0,0,0), thickness, cv2.LINE_AA)
+            cv2.putText(img, Speed_T,end2 , font, T_Font-0.7, (255,255,255), thickness+4, cv2.LINE_AA)
+            cv2.putText(img, Speed_T,end2 , font, T_Font-0.7, (0,0,0), thickness, cv2.LINE_AA)
+            
+                    #cv2.putText(img,Pred_T,(x+ (w/2) ,y-font_scale),font,font_scale,NMask_C,thickness,cv2.LINE_AA)
+            # cv2.rectangle(img, org, (300,300), Color, 2)
+                    
+
+            img = AppendGesture(img,Gesture,HAndsDir)
+            
+            cv2.imshow("Output",img)
+            # cv2.imshow("Normalized", normalized)
+            # cv2.imshow('Original_Input',original)
+            
+            
+            #[5]
+            #switch case
+            
+            k= cv2.waitKey(30) & 0xff
+            if k== 97: 
+                FPs-=1
+                if FPs<=0 :
+                    Fps = 1
+
+            elif k==100:
+                FPs+=1
+                if FPs>30:
+                    Fps = 30 
+                    
+            elif k == 32:
+                cap.release()
+                cap =SwitchCap(CapVideo,imagePath) 
+                CapVideo = not CapVideo
+                
+    except:
+        print('the video has ended')
+            
         
         
     
