@@ -73,12 +73,6 @@ class Net(nn.Module):
 
 
 def load_data(folder_path='./hands', shap=(640, 240)):
-    """
-    Returns hand gesture sequences (X) and their associated labels (Y).
-    Each sequence has two different labels.
-    The first label  Y describes the gesture class out of 14 possible gestures (e.g. swiping your hand to the right).
-    The second label Y describes the gesture class out of 28 possible gestures (e.g. swiping your hand to the right with your index pointed, or not pointed).
-    """
     data = pd.DataFrame(columns=['img_id', 'label'])
     persons = 10
     pngs = []
