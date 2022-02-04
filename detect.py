@@ -8,6 +8,7 @@
 #==============================================================================================
 
 from importlib.resources import path
+from msilib.schema import Class
 from turtle import back
 
 import pandas as pd
@@ -39,7 +40,8 @@ def Normalize(image,size= 128):
     gray = cv2.cvtColor(flipped, cv2.COLOR_BGR2GRAY)
     back = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
     n_Image = cv2.resize(back,dim,interpolation=cv2.INTER_AREA)
-    return n_Image
+    
+    return 255-n_Image
 
 
 def getPrediction(N_Image,loaded_model,ImagePath):
@@ -117,7 +119,11 @@ if __name__ =='__main__':
     
     # imagePath = './Assets/test.png'
     imagePath = './Assets/video_test.mp4'
-    NetPath = './gesture_model.pt'
+    NetPath = './gesture_model.pt'    
+    Classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'index': 5, 'ok': 6, 'palm_moved': 7, 'c': 8,
+           'down': 9}
+    pred_Classes = {value : key for (key, value) in Classes.items()}
+
 
     #[1] getting the custom  model 
     model = loadModel(NetPath)
@@ -174,8 +180,14 @@ if __name__ =='__main__':
         
         #[3]
         #plot results 
-        print(pred)
-        cv2.imshow("test",normalized)
+        # print(pred)
+        x = pred.item()
+        print('the prediction out of the net : "{}", the class : "{}"'.format(x, pred_Classes[x]))
+        # print(Classes[x])
+        # print(type(x))
+        # x = torch.tensor([3])
+        # x.item()
+        cv2.imshow("test",img)
         
         k= cv2.waitKey(30) & 0xff
         #print(k)
