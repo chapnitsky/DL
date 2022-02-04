@@ -36,12 +36,12 @@ from final_class import Net
 
 def Normalize(image,size= 128):
     dim = (size,size)
-    flipped = cv2.flip(image,1)
-    gray = cv2.cvtColor(flipped, cv2.COLOR_BGR2GRAY)
-    back = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-    n_Image = cv2.resize(back,dim,interpolation=cv2.INTER_AREA)
+    # flipped = cv2.flip(image,1)
+    # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # back = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+    n_Image = cv2.resize(image,dim,interpolation=cv2.INTER_AREA)
     
-    return 255-n_Image
+    return n_Image
 
 
 def getPrediction(N_Image,loaded_model,ImagePath):
@@ -125,11 +125,13 @@ if __name__ =='__main__':
 
     
     imagePath = './Assets/video_test.mp4'
-    NetPath = './NetPerfomance/73_model_8.pt'    
+    NetPath = './NetPerfomance/98_model_8.pt'    
 
 
     ClassAmount = 8
-    Classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'index': 5, 'ok': 6, 'palm_moved': 7, 'c': 8,'down': 9}
+    Classes= {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'palm_moved': 5, 'c': 6,
+           'down': 7}
+    # Classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'index': 5, 'ok': 6, 'palm_moved': 7, 'c': 8,'down': 9}
     pred_Classes = {value : key for (key, value) in Classes.items()}
 
 
