@@ -66,7 +66,7 @@ def getPrediction(N_Image,loaded_model,ImagePath):
     with torch.no_grad():
         TestImage = data_transforms(TestImage).float()
         # TestImage = TestImage.unsqueeze(0)
-        output  = loaded_model(TestImage)
+        output  = loaded_model(TestImage[None,...])
         _, predicted = torch.max(output.data, 1)
         return predicted
         # for data in test_loader:
@@ -183,13 +183,13 @@ if __name__ =='__main__':
             if FPs>30:
                 Fps = 30 
                 
-        elif k == 32:
-            cap.release()
-            cap =SwitchCap(CapVideo,imagePath) 
-            CapVideo = not CapVideo
+        # elif k == 32:
+        #     cap.release()
+        #     cap =SwitchCap(CapVideo,imagePath) 
+        #     CapVideo = not CapVideo
             
     
-    cap.release()
+    # cap.release()
 
         
         
