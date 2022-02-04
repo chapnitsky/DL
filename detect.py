@@ -8,6 +8,7 @@
 #==============================================================================================
 
 from importlib.resources import path
+from turtle import back
 
 import pandas as pd
 import numpy as np
@@ -35,8 +36,9 @@ from final_class import Net
 def Normalize(image,size= 128):
     dim = (size,size)
     flipped = cv2.flip(image,1)
-    # gray = cv2.cvtColor(flipped, cv2.COLOR_BGR2GRAY)
-    n_Image = cv2.resize(flipped,dim,interpolation=cv2.INTER_AREA)
+    gray = cv2.cvtColor(flipped, cv2.COLOR_BGR2GRAY)
+    back = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+    n_Image = cv2.resize(back,dim,interpolation=cv2.INTER_AREA)
     return n_Image
 
 
@@ -94,6 +96,7 @@ def loadModel(Path):
 def SwitchCap(CapVideo,path):
     if CapVideo:
         try:
+            #cap= cv2.VideoCapture(0,cv2.CAP_DSHOW)
             cap= cv2.VideoCapture(0)
             print('Swtiching Source to Cam')
         except:
@@ -112,7 +115,8 @@ def SwitchCap(CapVideo,path):
 
 if __name__ =='__main__':
     
-    imagePath = './Assets/test.png'
+    # imagePath = './Assets/test.png'
+    imagePath = './Assets/video_test.mp4'
     NetPath = './gesture_model.pt'
 
     #[1] getting the custom  model 
@@ -126,7 +130,7 @@ if __name__ =='__main__':
 
     # start frame/FPS
     count = 0
-    FPs = 15
+    FPs = 4
 
 
     #image anlyzation controls
@@ -147,19 +151,20 @@ if __name__ =='__main__':
     
     #[2] start the rending of the video
     
-    # cap = cv2.VideoCapture(imagePath)
-    
-    # while True:
-    for i in range(1):
+    cap = cv2.VideoCapture(imagePath)
+    # cap =SwitchCap(CapVideo,imagePath)
+
+    while True:
+    # for i in range(1):
         #[0]
         #update the the capture
-        # cap.set(cv2.CAP_PROP_POS_FRAMES, count)
-        # count+=FPs
+        cap.set(cv2.CAP_PROP_POS_FRAMES, count)
+        count+=FPs
 
         #[1]
         #read and normilze the image
-        # ret, img = cap.read()
-        img  = cv2.imread(imagePath)
+        ret, img = cap.read()
+        #img  = cv2.imread(imagePath)
         normalized = Normalize(img)
         
         #[2]
@@ -170,6 +175,7 @@ if __name__ =='__main__':
         #[3]
         #plot results 
         print(pred)
+        cv2.imshow("test",normalized)
         
         k= cv2.waitKey(30) & 0xff
         #print(k)
@@ -183,14 +189,14 @@ if __name__ =='__main__':
             if FPs>30:
                 Fps = 30 
                 
-        # elif k == 32:
-        #     cap.release()
-        #     cap =SwitchCap(CapVideo,imagePath) 
-        #     CapVideo = not CapVideo
+        elif k == 32:
+            cap.release()
+            cap =SwitchCap(CapVideo,imagePath) 
+            CapVideo = not CapVideo
             
     
-    # cap.release()
-
+    cap.release()
+    cv2.destroyAllWindows()
         
         
         
