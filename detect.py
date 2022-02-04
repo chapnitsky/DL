@@ -7,25 +7,11 @@
 #                                      Imports 
 #==============================================================================================
 
-from importlib.resources import path
-from msilib.schema import Class
-from turtle import back
 from cv2 import imread
-
-import pandas as pd
 import numpy as np
 import cv2
-from scipy.spatial import distance
-
-
-import torch 
-import torchvision
+import torch
 from torchvision import transforms as trans
-
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-import PIL.Image as Image
 from PIL import Image as PilConvert
 from final_project import Net
 
