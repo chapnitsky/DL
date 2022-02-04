@@ -91,7 +91,8 @@ def load_data(folder_path='./hands', shap=(640, 240)):
 
                     _indexes = [m.start() for m in re.finditer('_', png)]
                     label = int(png[_indexes[1] + 1: _indexes[2]]) - 1
-                    if label in [5, 6]:  # Ignore and pass the index finger and ok gesture due to vertical & horizontal rotation via transformer
+                    if label in [5,
+                                 6]:  # Ignore and pass the index finger and ok gesture due to vertical & horizontal rotation via transformer
                         break
 
                     if label not in [0, 1, 2, 3, 4]:  # Reconstruct labels types
@@ -241,7 +242,6 @@ if __name__ == "__main__":
         for (i, j), z in np.ndenumerate(mat):
             ax.text(j, i, '{:0.0f}'.format(z), ha='center', va='center')
         plt.show()
-
 
     plt.figure(figsize=(15, 15))
     plt.plot(epoch_nums, training_loss)
