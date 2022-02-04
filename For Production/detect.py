@@ -82,7 +82,7 @@ def SwitchCap(CapVideo,path):
 
 def AppendGesture(img,Gesture,HandPath):
 
-    scale_percent =150
+    scale_percent =100
     x_offset = 30
     y_offset = 40
         
