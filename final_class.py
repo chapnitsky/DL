@@ -133,7 +133,7 @@ def train(model, device, train_loader, optimizer, epoch):
     return avg_loss
 
 
-def test(model, device, test_loader, n_classes):
+def test(model, device, test_loader, n_classes, epoc):
     # Switch the model to evaluation mode (so we don't backpropagate or drop)
     model.eval()
     test_loss = 0
@@ -166,18 +166,17 @@ def test(model, device, test_loader, n_classes):
 
     # return average loss for the epoch
     # print(confusion_matrix)
-    arr = confusion_matrix.cpu().detach().numpy()
-    fig, ax = plt.subplots()
-    ax.matshow(arr)
-    plt.ylabel('Real Class')
-    plt.xlabel('Predicted Class')
-    for (i, j), z in np.ndenumerate(arr):
-        ax.text(j, i, '{:0.0f}'.format(z), ha='center', va='center')
+    if epoc == 10:
+        arr = confusion_matrix.cpu().detach().numpy()
+        fig, ax = plt.subplots()
+        ax.matshow(arr)
+        plt.ylabel('Real Class')
+        plt.xlabel('Predicted Class')
+        for (i, j), z in np.ndenumerate(arr):
+            ax.text(j, i, '{:0.0f}'.format(z), ha='center', va='center')
 
-    plt.show(block=False)
-    # plt.pause(3)
-    # plt.close()
-    print(confusion_matrix.diag() / confusion_matrix.sum(1))
+        plt.show()
+        print(confusion_matrix.diag() / confusion_matrix.sum(1))
 
     return avg_loss
 
@@ -236,7 +235,7 @@ if __name__ == "__main__":
     print('Training on', device)
     for epoch in range(1, epochs + 1):
         train_loss = train(model, device, train_loader, optimizer, epoch)
-        test_loss = test(model, device, test_loader, classes)
+        test_loss = test(model, device, test_loader, classes, epoch)
         epoch_nums.append(epoch)
         training_loss.append(train_loss)
         test_los.append(test_loss)
