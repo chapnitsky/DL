@@ -165,7 +165,7 @@ def test(model, device, test_loader, n_classes):
                 100. * correct / len(test_loader.dataset)))
 
     # return average loss for the epoch
-    print(confusion_matrix)
+    # print(confusion_matrix)
     arr = confusion_matrix.cpu().detach().numpy()
     fig, ax = plt.subplots()
     ax.matshow(arr)
@@ -173,8 +173,10 @@ def test(model, device, test_loader, n_classes):
     plt.xlabel('Predicted Class')
     for (i, j), z in np.ndenumerate(arr):
         ax.text(j, i, '{:0.0f}'.format(z), ha='center', va='center')
-    plt.show()
 
+    plt.show(block=False)
+    # plt.pause(3)
+    # plt.close()
     print(confusion_matrix.diag() / confusion_matrix.sum(1))
 
     return avg_loss
