@@ -1,3 +1,4 @@
+import numpy
 import torch
 import torchvision
 import torchvision.transforms as trans
@@ -17,6 +18,7 @@ from PIL import Image
 classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'palm_moved': 5, 'c': 6,
            'down': 7}
 
+rev_classes = {value: key for (key, value) in classes.items()}
 
 class handsDataSet(Dataset):
     def __init__(self, transformer, data_frame):
@@ -221,10 +223,10 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     classes = 8
     model = Net(num_classes=classes).to(device)
-    # model.load_state_dict(torch.load(percent_98))  # Loading the trained one already, use it if you would like to
+    model.load_state_dict(torch.load(percent_98))  # Loading the trained one already, use it if you would like to
     loss_criteria = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
-    epochs = 10
+    epochs = 1
     epoch_nums = []
     training_loss = []
     test_los = []
@@ -232,19 +234,29 @@ if __name__ == "__main__":
     wrongs = []
     print('Training on', device)
     for epoch in range(1, epochs + 1):
-        train_loss = train(model, device, train_loader, optimizer, epoch)
+        # train_loss = train(model, device, train_loader, optimizer, epoch)
         test_loss, conf_mat, wrong = test(model, device, test_loader, classes, epoch)
         epoch_nums.append(epoch)
         wrongs.extend(wrong)
-        training_loss.append(train_loss)
+        # training_loss.append(train_loss)
         test_los.append(test_loss)
         confusion_mats.append(conf_mat)
 
     torch.save(model.state_dict(), 'gesture_model.pt')
-    model.eval()
-    for mat in confusion_mats:
+    num_wrongs_to_disp = 5
+    for i in range(num_wrongs_to_disp):
+        pred_typ = rev_classes[int(wrongs[i][2])]
+        real_typ = rev_classes[int(wrongs[i][1])]
+        plt.axis('off')
+        img = wrongs[i][0].permute(1, 2, 0)
+        plt.imshow(img)
+        plt.title(f'Real: {real_typ}, Predicted: {pred_typ}')
+        plt.show()
+
+    for ind, mat in enumerate(confusion_mats):
         fig, ax = plt.subplots()
         ax.matshow(mat)
+        plt.title(f'Confusion Matrix for Epoch: {ind + 1}')
         plt.ylabel('Real Class')
         plt.xlabel('Predicted Class')
         for (i, j), z in np.ndenumerate(mat):
@@ -252,9 +264,10 @@ if __name__ == "__main__":
         plt.show()
 
     plt.figure(figsize=(15, 15))
-    plt.plot(epoch_nums, training_loss)
+    # plt.plot(epoch_nums, training_loss)
     plt.plot(epoch_nums, test_los)
-    plt.xlabel('epoch')
-    plt.ylabel('loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
     plt.legend(['training', 'test'], loc='upper right')
+    plt.title('Cross Entropy Loss function')
     plt.show()
