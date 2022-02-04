@@ -10,6 +10,7 @@
 from importlib.resources import path
 from msilib.schema import Class
 from turtle import back
+from cv2 import imread
 
 import pandas as pd
 import numpy as np
@@ -36,12 +37,15 @@ from final_class import Net
 
 def Normalize(image,size= 128):
     dim = (size,size)
-    # flipped = cv2.flip(image,1)
-    # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # back = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-    n_Image = cv2.resize(image,dim,interpolation=cv2.INTER_AREA)
+    flipped = cv2.flip(image,1)
+    gray = cv2.cvtColor(flipped, cv2.COLOR_BGR2GRAY)
+    back = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+    F_image = (back.astype(float)*1.9).astype(np.uint8)
+    n_Image = cv2.resize(back,dim,interpolation=cv2.INTER_AREA)
+    F_image[F_image>=255]=255
+    F_image[F_image<=0]=0
     
-    return n_Image
+    return F_image
 
 
 def getPrediction(N_Image,loaded_model,ImagePath):
@@ -71,6 +75,7 @@ def getPrediction(N_Image,loaded_model,ImagePath):
         TestImage = data_transforms(TestImage).float()
         # TestImage = TestImage.unsqueeze(0)
         output  = loaded_model(TestImage[None,...])
+        print(output.data)
         _, predicted = torch.max(output.data, 1)
         return predicted
         # for data in test_loader:
@@ -109,6 +114,21 @@ def SwitchCap(CapVideo,path):
         cap =cv2.VideoCapture(path)
     return cap
 
+def AppendGesture(img,Gesture,HandPath):
+
+    try:
+        path = HandPath+''+Gesture+'.png'
+        Hand = imread(path,cv2.IMREAD_UNCHANGED)
+        scale_percent =40
+        width = int(Hand.shape[1] * scale_percent / 100)
+        height = int(Hand.shape[0] * scale_percent / 100)
+        dim = (width, height)
+        Hand = cv2.resize(Hand, dim, interpolation = cv2.INTER_AREA)
+        cv2.imshow('',Hand)
+    except:
+        pass
+
+
 #=================================================================================
 #                                    anlyze video 
 #=================================================================================
@@ -126,11 +146,12 @@ if __name__ =='__main__':
     
     imagePath = './Assets/video_test.mp4'
     NetPath = './NetPerfomance/98_model_8.pt'    
+    HAndsDir = './Assets/Hands/'
 
 
     ClassAmount = 8
-    Classes= {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'palm_moved': 5, 'c': 6,
-           'down': 7}
+    Classes= {'Palm': 0, 'L': 1, 'Fist': 2, 'Fist_Move': 3, 'Thumb': 4, 'Palm_Move': 5, 'C': 6,
+           'Down': 7}
     # Classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'index': 5, 'ok': 6, 'palm_moved': 7, 'c': 8,'down': 9}
     pred_Classes = {value : key for (key, value) in Classes.items()}
 
@@ -187,7 +208,8 @@ if __name__ =='__main__':
         #plot results 
 
         x = pred.item()
-        Pred_T = 'The class = {}'.format(pred_Classes[x])
+        Gesture= pred_Classes[x]
+        Pred_T = 'The class = {}'.format(Gesture)
         
         
         #[4]
@@ -201,6 +223,7 @@ if __name__ =='__main__':
         cv2.imshow('Original_Input',original)
         cv2.imshow("Output",img)
         cv2.imshow("Normalized", normalized)
+        AppendGesture('',Gesture,HAndsDir)
         
         
         #[5]
