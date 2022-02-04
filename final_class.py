@@ -164,19 +164,8 @@ def test(model, device, test_loader, n_classes, epoc):
                 batch_count, avg_loss, correct, len(test_loader.dataset),
                 100. * correct / len(test_loader.dataset)))
 
-    # return average loss for the epoch
-    # print(confusion_matrix)
     arr = confusion_matrix.cpu().detach().numpy()
-    if epoc == 10:
-        fig, ax = plt.subplots()
-        ax.matshow(arr)
-        plt.ylabel('Real Class')
-        plt.xlabel('Predicted Class')
-        for (i, j), z in np.ndenumerate(arr):
-            ax.text(j, i, '{:0.0f}'.format(z), ha='center', va='center')
-
-        plt.show()
-        print(confusion_matrix.diag() / confusion_matrix.sum(1))
+    # print(confusion_matrix.diag() / confusion_matrix.sum(1))
 
     return avg_loss, arr
 
@@ -244,6 +233,15 @@ if __name__ == "__main__":
 
     torch.save(model.state_dict(), 'gesture_model.pt')
     model.eval()
+    for mat in confusion_mats:
+        fig, ax = plt.subplots()
+        ax.matshow(mat)
+        plt.ylabel('Real Class')
+        plt.xlabel('Predicted Class')
+        for (i, j), z in np.ndenumerate(mat):
+            ax.text(j, i, '{:0.0f}'.format(z), ha='center', va='center')
+        plt.show()
+
 
     plt.figure(figsize=(15, 15))
     plt.plot(epoch_nums, training_loss)
