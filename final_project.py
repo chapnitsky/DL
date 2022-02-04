@@ -11,11 +11,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
 
-
 classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'palm_moved': 5, 'c': 6,
            'down': 7}
 
 rev_classes = {value: key for (key, value) in classes.items()}
+
 
 class handsDataSet(Dataset):
     def __init__(self, transformer, data_frame):
