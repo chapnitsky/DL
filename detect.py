@@ -120,7 +120,7 @@ if __name__ =='__main__':
 
 
     
-    imagePath = './Assets/video_test.mp4'
+    imagePath = './Assets/DL_HandGesture.mp4'
     NetPath = './NetPerfomance/98_model_8.pt'    
     HAndsDir = './Assets/'
 
