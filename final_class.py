@@ -13,8 +13,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
 
-classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'index': 5, 'ok': 6, 'palm_moved': 7, 'c': 8,
-           'down': 9}
+classes = {'palm': 0, 'l': 1, 'fist': 2, 'fist_moved': 3, 'thumb': 4, 'palm_moved': 5, 'c': 6,
+           'down': 7}
 
 
 class handsDataSet(Dataset):
@@ -28,11 +28,13 @@ class handsDataSet(Dataset):
     def __getitem__(self, index):
         img_id = self.data['img_id'][index]
         typ = self.data['label'][index]
-
+        sub_dir = typ
+        if typ >= 5:
+            sub_dir += 2
         _indexes = [m.start() for m in re.finditer('_', img_id)]
         person = int(img_id[_indexes[0] + 1: _indexes[1]])
         path = f'{os.getcwd()}/hands/{person}'
-        dir = os.listdir(path)[typ]
+        dir = os.listdir(path)[sub_dir]
         path += f'/{dir}/{img_id}'
 
         img = Image.open(path).convert('RGB')
@@ -44,7 +46,7 @@ class handsDataSet(Dataset):
 
 class Net(nn.Module):
     # Defining the Constructor
-    def __init__(self, num_classes=2):
+    def __init__(self, num_classes=8):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(3, 10, kernel_size=(3, 3))
         self.conv2 = nn.Conv2d(10, 20, kernel_size=(3, 3))
@@ -86,11 +88,17 @@ def load_data(folder_path='./hands', shap=(640, 240)):
             for png in subs:
                 if '.png' in png:
                     png = str(png)
-                    pngs.append(png)
 
                     _indexes = [m.start() for m in re.finditer('_', png)]
                     label = int(png[_indexes[1] + 1: _indexes[2]]) - 1
+                    if label in [5, 6]:  # Pass the index finger and ok gesture due to vertical & horizontal rotation via transformer
+                        break
+
+                    if label not in [0, 1, 2, 3, 4]:  # Reconstruct labels types
+                        label -= 2
+
                     labels.append(label)
+                    pngs.append(png)
 
     data['img_id'] = pngs
     data['label'] = labels
@@ -125,11 +133,13 @@ def train(model, device, train_loader, optimizer, epoch):
     return avg_loss
 
 
-def test(model, device, test_loader):
+def test(model, device, test_loader, n_classes):
     # Switch the model to evaluation mode (so we don't backpropagate or drop)
     model.eval()
     test_loss = 0
     correct = 0
+    confusion_matrix = torch.zeros(n_classes, n_classes)
+
     with torch.no_grad():
         batch_count = 0
         for data, target in test_loader:
@@ -142,9 +152,12 @@ def test(model, device, test_loader):
             # Calculate the accuracy for this batch
 
             # make predictions
-
             _, predicted = torch.max(output.data, 1)
+            for t, p in zip(target.view(-1), predicted.view(-1)):
+                confusion_matrix[t.long(), p.long()] += 1
+
             correct += torch.sum(target == predicted).item()
+
             # Calculate the average loss and total accuracy for this epoch
             avg_loss = test_loss / batch_count
             print('Test set: Average loss: {:.6f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
@@ -152,6 +165,18 @@ def test(model, device, test_loader):
                 100. * correct / len(test_loader.dataset)))
 
     # return average loss for the epoch
+    print(confusion_matrix)
+    arr = confusion_matrix.cpu().detach().numpy()
+    fig, ax = plt.subplots()
+    ax.matshow(arr)
+    plt.ylabel('Real Class')
+    plt.xlabel('Predicted Class')
+    for (i, j), z in np.ndenumerate(arr):
+        ax.text(j, i, '{:0.0f}'.format(z), ha='center', va='center')
+    plt.show()
+
+    print(confusion_matrix.diag() / confusion_matrix.sum(1))
+
     return avg_loss
 
 
@@ -197,19 +222,19 @@ if __name__ == "__main__":
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    classes = 10
+    classes = 8
     model = Net(num_classes=classes).to(device)
-    # model.load_state_dict(torch.load('gesture_model.pt'))
+    # model.load_state_dict(torch.load('./NetPerfomance/75_model.pt'))
     loss_criteria = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
-    epochs = 20
+    epochs = 10
     epoch_nums = []
     training_loss = []
     test_los = []
     print('Training on', device)
     for epoch in range(1, epochs + 1):
         train_loss = train(model, device, train_loader, optimizer, epoch)
-        test_loss = test(model, device, test_loader)
+        test_loss = test(model, device, test_loader, classes)
         epoch_nums.append(epoch)
         training_loss.append(train_loss)
         test_los.append(test_loss)
